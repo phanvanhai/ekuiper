@@ -3,6 +3,10 @@ package planner
 import (
 	"errors"
 	"fmt"
+	"path"
+	"sort"
+	"strings"
+
 	"github.com/emqx/kuiper/common"
 	"github.com/emqx/kuiper/common/kv"
 	"github.com/emqx/kuiper/xsql"
@@ -10,9 +14,6 @@ import (
 	"github.com/emqx/kuiper/xstream/api"
 	"github.com/emqx/kuiper/xstream/nodes"
 	"github.com/emqx/kuiper/xstream/operators"
-	"path"
-	"sort"
-	"strings"
 )
 
 func Plan(rule *api.Rule, storePath string) (*xstream.TopologyNew, error) {
@@ -355,7 +356,7 @@ func createLogicalPlan(stmt *xsql.SelectStatement, opt *api.RuleOption, store kv
 			}.Init()
 			if w.Interval != nil {
 				wp.interval = w.Interval.Val
-			} else if w.WindowType == xsql.COUNT_WINDOW {
+			} else if w.WindowType == xsql.COUNT_WINDOW || w.WindowType == xsql.PAD_COUNT_WINDOW {
 				//if no interval value is set and it's count window, then set interval to length value.
 				wp.interval = w.Length.Val
 			}

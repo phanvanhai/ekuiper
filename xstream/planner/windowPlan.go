@@ -18,7 +18,7 @@ func (p WindowPlan) Init() *WindowPlan {
 }
 
 func (p *WindowPlan) PushDownPredicate(condition xsql.Expr) (xsql.Expr, LogicalPlan) {
-	if p.wtype == xsql.COUNT_WINDOW {
+	if p.wtype == xsql.COUNT_WINDOW || p.wtype == xsql.PAD_COUNT_WINDOW {
 		return condition, p
 	} else if p.isEventTime {
 		// TODO event time filter, need event window op support

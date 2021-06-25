@@ -3,12 +3,13 @@ package xsql
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/emqx/kuiper/common"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/emqx/kuiper/common"
 )
 
 type Node interface {
@@ -265,6 +266,7 @@ const (
 	SLIDING_WINDOW
 	SESSION_WINDOW
 	COUNT_WINDOW
+	PAD_COUNT_WINDOW
 )
 
 type Window struct {
