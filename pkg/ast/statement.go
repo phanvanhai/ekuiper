@@ -166,6 +166,7 @@ const (
 	SLIDING_WINDOW
 	SESSION_WINDOW
 	COUNT_WINDOW
+	PAD_COUNT_WINDOW
 )
 
 type Window struct {
