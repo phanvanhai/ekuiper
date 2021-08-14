@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kv
+package sqlkv
 
 import (
 	"os"
@@ -22,17 +22,16 @@ import (
 	"testing"
 )
 
-func TestSqliteKVStore_Funcs(t *testing.T) {
+func TestSqlKVStore_Funcs(t *testing.T) {
 	abs, _ := filepath.Abs("test")
 	if f, _ := os.Stat(abs); f != nil {
 		os.Remove(abs)
 	}
+	_, db := newSqliteDatabase(abs)
+	db.Connect()
+	database = db
 
-	ks := GetSqliteKVStore(abs)
-	if e := ks.Open(); e != nil {
-		t.Errorf("Failed to open data %s.", e)
-	}
-
+	ks, _ := GetKVStore("test")
 	if err := ks.Setnx("foo", "bar"); nil != err {
 		t.Error(err)
 	}
@@ -71,14 +70,6 @@ func TestSqliteKVStore_Funcs(t *testing.T) {
 		}
 	}
 
-	if e2 := ks.Close(); e2 != nil {
-		t.Errorf("Failed to close data: %s.", e2)
-	}
-
-	if err := ks.Open(); nil != err {
-		t.Error(err)
-	}
-
 	var v2 string
 	if ok, _ := ks.Get("foo", &v2); ok {
 		if !reflect.DeepEqual("bar", v2) {
@@ -108,6 +99,7 @@ func TestSqliteKVStore_Funcs(t *testing.T) {
 		reflect.DeepEqual(0, len(keys))
 	}
 
+	database.Disconnect()
 	dir, _ := filepath.Split(abs)
 	abs = path.Join(dir, "sqliteKV.db")
 	os.Remove(abs)

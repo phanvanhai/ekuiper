@@ -1,7 +1,7 @@
 # LF Edge eKuiper - An edge lightweight IoT data analytics software
 
 [![GitHub Release](https://img.shields.io/github/release/lf-edge/ekuiper?color=brightgreen)](https://github.com/lf-edge/ekuiper/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/lfedge/ekuiper)](https://hub.docker.com/r/lfedge/ekuiper)
+[![Docker Pulls](https://img.shields.io/docker/pulls/emqx/kuiper)](https://hub.docker.com/r/lfedge/ekuiper)
 [![Slack](https://img.shields.io/badge/Slack-LF%20Edge-39AE85?logo=slack)](https://join.slack.com/t/lfedge/shared_invite/zt-7kavdtmq-SeyFzM2CEABBcKYGEVCgkw)
 [![Twitter](https://img.shields.io/badge/Follow-EMQ-1DA1F2?logo=twitter)](https://twitter.com/EMQTech)
 [![Community](https://img.shields.io/badge/Community-Kuiper-yellow?logo=github)](https://github.com/lf-edge/ekuiper/discussions)
@@ -61,8 +61,20 @@ It can be run at various IoT edge use scenarios, such as real-time processing of
 - [eKuiper 5 minutes quick start](docs/en_US/quick_start_docker.md)
 - [EdgeX rule engine tutorial](docs/en_US/edgex/edgex_rule_engine_tutorial.md)
 
-## Slack channels
+## Community
+
 Join our [Slack](https://join.slack.com/t/lfedge/shared_invite/zt-7kavdtmq-SeyFzM2CEABBcKYGEVCgkw), and then join [ekuiper](https://lfedge.slack.com/archives/C024F4P7KCK) or [ekuiper-user](https://lfedge.slack.com/archives/C024F4SMEMR) channel.
+
+### Meeting
+
+Subscribe to community events [calendar](https://lists.lfedge.org/g/ekuiper-tsc/calendar?calstart=2021-08-06).
+
+Weekly community meeting at Friday 10:30AM GMT+8:
+- [zoom link](https://zoom.us/j/95097577087?pwd=azZaOXpXWmFoOXpqK293RFp0N1pydz09 )
+- [Meeting minutes](https://wiki.lfedge.org/display/EKUIPER/Weekly+Development+Meeting)
+
+## Contributing
+Thank you for your contribution! Please refer to the [CONTRIBUTING.md](./docs/CONTRIBUTING.md) for more information.
 
 ## Performance test result
 

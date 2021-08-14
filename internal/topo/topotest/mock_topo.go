@@ -29,12 +29,15 @@ import (
 	"github.com/lf-edge/ekuiper/pkg/api"
 	"github.com/lf-edge/ekuiper/pkg/ast"
 	"github.com/lf-edge/ekuiper/pkg/cast"
-	"path"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 )
+
+func init() {
+	testx.InitEnv()
+}
 
 const POSTLEAP = 1000 // Time change after all data sends out
 type RuleTest struct {
@@ -45,10 +48,6 @@ type RuleTest struct {
 	T    *topo.PrintableTopo    // printable topo, an optional field
 	W    int                    // wait time for each data sending, in milli
 }
-
-var (
-	DbDir = testx.GetDbDir()
-)
 
 func compareMetrics(tp *topo.Topo, m map[string]interface{}) (err error) {
 	keys, values := tp.GetMetrics()
@@ -252,7 +251,7 @@ func createStream(t *testing.T, tt RuleTest, j int, opt *api.RuleOption, sinkPro
 	}
 	mockSink := mocknode.NewMockSink()
 	sink := node.NewSinkNodeWithSink("mockSink", mockSink, sinkProps)
-	tp, err := planner.PlanWithSourcesAndSinks(&api.Rule{Id: fmt.Sprintf("%s_%d", tt.Name, j), Sql: tt.Sql, Options: opt}, DbDir, sources, []*node.SinkNode{sink})
+	tp, err := planner.PlanWithSourcesAndSinks(&api.Rule{Id: fmt.Sprintf("%s_%d", tt.Name, j), Sql: tt.Sql, Options: opt}, sources, []*node.SinkNode{sink})
 	if err != nil {
 		t.Error(err)
 		return nil, 0, nil, nil, nil
@@ -263,7 +262,7 @@ func createStream(t *testing.T, tt RuleTest, j int, opt *api.RuleOption, sinkPro
 
 // Create or drop streams
 func HandleStream(createOrDrop bool, names []string, t *testing.T) {
-	p := processor.NewStreamProcessor(path.Join(DbDir, "stream"))
+	p := processor.NewStreamProcessor()
 	for _, name := range names {
 		var sql string
 		if createOrDrop {
@@ -445,7 +444,7 @@ func DoCheckpointRuleTest(t *testing.T, tests []RuleCheckpointTest, j int, opt *
 }
 
 func CreateRule(name, sql string) (*api.Rule, error) {
-	p := processor.NewRuleProcessor(DbDir)
+	p := processor.NewRuleProcessor()
 	p.ExecDrop(name)
 	return p.ExecCreate(name, sql)
 }

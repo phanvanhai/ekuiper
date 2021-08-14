@@ -17,12 +17,11 @@ package planner
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lf-edge/ekuiper/internal/pkg/sqlkv"
 	"github.com/lf-edge/ekuiper/internal/testx"
 	"github.com/lf-edge/ekuiper/internal/xsql"
 	"github.com/lf-edge/ekuiper/pkg/api"
 	"github.com/lf-edge/ekuiper/pkg/ast"
-	"github.com/lf-edge/ekuiper/pkg/kv"
-	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -113,16 +112,18 @@ var tests = []struct {
 		sql: `SELECT sin(temp) as temp1, cos(temp1) FROM src1`,
 		r:   newErrorStructWithS("unknown field temp1", ""),
 	},
+	{ // 14
+		sql: `SELECT collect(*)[-1] as current FROM src1 GROUP BY COUNTWINDOW(2, 1) HAVING isNull(current->name) = false`,
+		r:   newErrorStruct(""),
+	},
 }
 
 func Test_validation(t *testing.T) {
-	store := kv.GetDefaultKVStore(path.Join(DbDir, "stream"))
-	err := store.Open()
+	store, err := sqlkv.GetKVStore("stream")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer store.Close()
 	streamSqls := map[string]string{
 		"src1": `CREATE STREAM src1 (
 					id1 BIGINT,
@@ -179,13 +180,11 @@ func Test_validation(t *testing.T) {
 }
 
 func Test_validationSchemaless(t *testing.T) {
-	store := kv.GetDefaultKVStore(path.Join(DbDir, "stream"))
-	err := store.Open()
+	store, err := sqlkv.GetKVStore("stream")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer store.Close()
 	streamSqls := map[string]string{
 		"src1": `CREATE STREAM src1 (
 				) WITH (DATASOURCE="src1", FORMAT="json", KEY="ts");`,

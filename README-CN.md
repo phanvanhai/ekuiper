@@ -1,6 +1,6 @@
 # LF Edge eKuiper - 超轻量物联网边缘数据分析软件
 [![GitHub Release](https://img.shields.io/github/release/lf-edge/ekuiper?color=brightgreen)](https://github.com/lf-edge/ekuiper/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/lfedge/ekuiper)](https://hub.docker.com/r/lfedge/ekuiper)
+[![Docker Pulls](https://img.shields.io/docker/pulls/emqx/kuiper)](https://hub.docker.com/r/lfedge/ekuiper)
 [![Slack](https://img.shields.io/badge/Slack-LF%20Edge-39AE85?logo=slack)](https://join.slack.com/t/lfedge/shared_invite/zt-7kavdtmq-SeyFzM2CEABBcKYGEVCgkw)
 [![Twitter](https://img.shields.io/badge/Follow-EMQ-1DA1F2?logo=twitter)](https://twitter.com/EMQTech)
 [![问答社区](https://img.shields.io/badge/问答社区-Kuiper-yellow)](https://askemq.com/c/kuiper/)
@@ -72,6 +72,18 @@ eKuiper 可以运行在各类物联网的边缘使用场景中，比如工业物
 
 欢迎你将任何 bug、问题和功能请求提交到 [lf-edge/ekuiper](https://github.com/lf-edge/ekuiper/issues)。
 
+### 会议
+
+欢迎订阅[社区日历](https://lists.lfedge.org/g/ekuiper-tsc/calendar?calstart=2021-08-06) 。
+
+欢迎参加社区周会，每周五早上 10:30 举行。
+- [zoom 会议链接](https://zoom.us/j/95097577087?pwd=azZaOXpXWmFoOXpqK293RFp0N1pydz09 )
+- [会议纪要](https://wiki.lfedge.org/display/EKUIPER/Weekly+Development+Meeting)
+
+## 贡献
+
+感谢您的贡献！请参阅 [CONTRIBUTING.md](./docs/CONTRIBUTING.md) 获取详细信息。
+
 ## 性能测试结果
 
 ### MQTT 吞吐量测试支持
@@ -134,6 +146,12 @@ eKuiper 可以运行在各类物联网的边缘使用场景中，比如工业物
   - [规则](docs/zh_CN/rules/overview.md)
   - [扩展eKuiper](docs/zh_CN/extension/overview.md)
   - [插件](docs/zh_CN/plugins/overview.md)
+
+## 视频教程
+
+- [基于 KubeEdge 和 Kuiper的边缘流式数据处理实践](https://www.bilibili.com/video/BV1h54y167CL?from=search&seid=9124550685624172830)
+- [云边协同高效实现物联网边缘流式业务处理 - 华为 IEF & EMQ X Kuiper 轻量级边缘数据解决方案](https://www.bilibili.com/video/BV1hQ4y1A7Vy?from=search&seid=9124550685624172830)
+- [Edge X 规则引擎实战](https://zoom.us/rec/play/DgWxHH6_d33nTzlsQP3WgHu0jJCezPG2sXOK72GVb3RcSZvubFMIYvJiY9gwPIIRYXK7t-5XaYdCmBLi.9eDmWb-Fncv8J6_v?startTime=1627005637000)
 
 ## 从源码编译
 

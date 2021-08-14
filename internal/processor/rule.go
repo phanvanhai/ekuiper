@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lf-edge/ekuiper/internal/conf"
+	"github.com/lf-edge/ekuiper/internal/pkg/sqlkv"
 	"github.com/lf-edge/ekuiper/internal/pkg/tskv"
 	"github.com/lf-edge/ekuiper/internal/topo"
 	"github.com/lf-edge/ekuiper/internal/topo/node"
@@ -28,18 +29,19 @@ import (
 	"github.com/lf-edge/ekuiper/pkg/cast"
 	"github.com/lf-edge/ekuiper/pkg/errorx"
 	"github.com/lf-edge/ekuiper/pkg/kv"
-	"path"
 )
 
 type RuleProcessor struct {
-	db        kv.KeyValue
-	rootDbDir string
+	db kv.KeyValue
 }
 
-func NewRuleProcessor(d string) *RuleProcessor {
+func NewRuleProcessor() *RuleProcessor {
+	db, err := sqlkv.GetKVStore("rule")
+	if err != nil {
+		panic(fmt.Sprintf("Can not initalize store for the rule processor at path 'rule': %v", err))
+	}
 	processor := &RuleProcessor{
-		db:        kv.GetDefaultKVStore(path.Join(d, "rule")),
-		rootDbDir: d,
+		db: db,
 	}
 	return processor
 }
@@ -49,12 +51,6 @@ func (p *RuleProcessor) ExecCreate(name, ruleJson string) (*api.Rule, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	err = p.db.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer p.db.Close()
 
 	err = p.db.Setnx(rule.Id, ruleJson)
 	if err != nil {
@@ -70,12 +66,6 @@ func (p *RuleProcessor) ExecUpdate(name, ruleJson string) (*api.Rule, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	err = p.db.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer p.db.Close()
 
 	err = p.db.Set(rule.Id, ruleJson)
 	if err != nil {
@@ -99,12 +89,6 @@ func (p *RuleProcessor) ExecReplaceRuleState(name string, triggered bool) (err e
 		return fmt.Errorf("Marshal rule %s error : %s.", name, err)
 	}
 
-	err = p.db.Open()
-	if err != nil {
-		return err
-	}
-	defer p.db.Close()
-
 	err = p.db.Set(name, string(ruleJson))
 	if err != nil {
 		return err
@@ -115,11 +99,6 @@ func (p *RuleProcessor) ExecReplaceRuleState(name string, triggered bool) (err e
 }
 
 func (p *RuleProcessor) GetRuleByName(name string) (*api.Rule, error) {
-	err := p.db.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer p.db.Close()
 	var s1 string
 	f, _ := p.db.Get(name, &s1)
 	if !f {
@@ -194,7 +173,7 @@ func (p *RuleProcessor) getRuleByJson(name, ruleJson string) (*api.Rule, error) 
 }
 
 func (p *RuleProcessor) ExecQuery(ruleid, sql string) (*topo.Topo, error) {
-	if tp, err := planner.PlanWithSourcesAndSinks(p.getDefaultRule(ruleid, sql), p.rootDbDir, nil, []*node.SinkNode{node.NewSinkNode("sink_memory_log", "logToMemory", nil)}); err != nil {
+	if tp, err := planner.PlanWithSourcesAndSinks(p.getDefaultRule(ruleid, sql), nil, []*node.SinkNode{node.NewSinkNode("sink_memory_log", "logToMemory", nil)}); err != nil {
 		return nil, err
 	} else {
 		go func() {
@@ -214,11 +193,6 @@ func (p *RuleProcessor) ExecQuery(ruleid, sql string) (*topo.Topo, error) {
 }
 
 func (p *RuleProcessor) ExecDesc(name string) (string, error) {
-	err := p.db.Open()
-	if err != nil {
-		return "", err
-	}
-	defer p.db.Close()
 	var s1 string
 	f, _ := p.db.Get(name, &s1)
 	if !f {
@@ -233,20 +207,10 @@ func (p *RuleProcessor) ExecDesc(name string) (string, error) {
 }
 
 func (p *RuleProcessor) GetAllRules() ([]string, error) {
-	err := p.db.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer p.db.Close()
 	return p.db.Keys()
 }
 
 func (p *RuleProcessor) ExecDrop(name string) (string, error) {
-	err := p.db.Open()
-	if err != nil {
-		return "", err
-	}
-	defer p.db.Close()
 	result := fmt.Sprintf("Rule %s is dropped.", name)
 	var ruleJson string
 	if ok, _ := p.db.Get(name, &ruleJson); ok {
@@ -261,7 +225,7 @@ func (p *RuleProcessor) ExecDrop(name string) (string, error) {
 			result = fmt.Sprintf("%s. Clean checkpoint cache faile: %s.", result, err)
 		}
 	}
-	err = p.db.Delete(name)
+	err := p.db.Delete(name)
 	if err != nil {
 		return "", err
 	} else {
@@ -278,16 +242,10 @@ func cleanCheckpoint(name string) error {
 }
 
 func cleanSinkCache(rule *api.Rule) error {
-	dbDir, err := conf.GetDataLoc()
+	store, err := sqlkv.GetKVStore("sink")
 	if err != nil {
 		return err
 	}
-	store := kv.GetDefaultKVStore(path.Join(dbDir, "sink"))
-	err = store.Open()
-	if err != nil {
-		return err
-	}
-	defer store.Close()
 	for d, m := range rule.Actions {
 		con := 1
 		for name, action := range m {

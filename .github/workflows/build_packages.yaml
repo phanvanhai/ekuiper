@@ -96,6 +96,7 @@ jobs:
                 - sinks/influx
                 - sinks/tdengine
                 - sinks/zmq
+                - sinks/redis
                 - sources/random
                 - sources/zmq
                 - functions/accumulateWordCount

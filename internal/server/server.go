@@ -16,6 +16,7 @@ package server
 
 import (
 	"github.com/lf-edge/ekuiper/internal/conf"
+	"github.com/lf-edge/ekuiper/internal/pkg/sqlkv"
 	"github.com/lf-edge/ekuiper/internal/plugin"
 	"github.com/lf-edge/ekuiper/internal/processor"
 	"github.com/lf-edge/ekuiper/internal/service"
@@ -28,7 +29,6 @@ import (
 	"net/rpc"
 	"os"
 	"os/signal"
-	"path"
 	"syscall"
 	"time"
 )
@@ -52,21 +52,26 @@ func StartUp(Version, LoadFileType string) {
 
 	dr, err := conf.GetDataLoc()
 	if err != nil {
-		logger.Panic(err)
+		panic(err)
 	} else {
 		logger.Infof("db location is %s", dr)
 		dataDir = dr
 	}
 
-	ruleProcessor = processor.NewRuleProcessor(dataDir)
-	streamProcessor = processor.NewStreamProcessor(path.Join(dataDir, "stream"))
+	err = sqlkv.Setup(dataDir)
+	if err != nil {
+		panic(err)
+	}
+
+	ruleProcessor = processor.NewRuleProcessor()
+	streamProcessor = processor.NewStreamProcessor()
 	pluginManager, err = plugin.NewPluginManager()
 	if err != nil {
-		logger.Panic(err)
+		panic(err)
 	}
 	serviceManager, err = service.GetServiceManager()
 	if err != nil {
-		logger.Panic(err)
+		panic(err)
 	}
 	xsql.InitFuncRegisters(serviceManager, pluginManager)
 
@@ -180,5 +185,6 @@ func StartUp(Version, LoadFileType string) {
 		logger.Info("prometheus server successfully shutdown.")
 	}
 
+	sqlkv.Close()
 	os.Exit(0)
 }

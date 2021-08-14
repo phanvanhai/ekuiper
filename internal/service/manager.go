@@ -20,6 +20,7 @@ import (
 	kconf "github.com/lf-edge/ekuiper/internal/conf"
 	"github.com/lf-edge/ekuiper/internal/pkg/filex"
 	"github.com/lf-edge/ekuiper/internal/pkg/httpx"
+	"github.com/lf-edge/ekuiper/internal/pkg/sqlkv"
 	"github.com/lf-edge/ekuiper/pkg/api"
 	"github.com/lf-edge/ekuiper/pkg/kv"
 	"io/ioutil"
@@ -59,17 +60,11 @@ func GetServiceManager() (*Manager, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot find etc/services folder: %s", err)
 		}
-		dbDir, err := kconf.GetDataLoc()
-		if err != nil {
-			return nil, fmt.Errorf("cannot find db folder: %s", err)
-		}
-		sdb := kv.GetDefaultKVStore(path.Join(dbDir, "services"))
-		fdb := kv.GetDefaultKVStore(path.Join(dbDir, "serviceFuncs"))
-		err = sdb.Open()
+		sdb, err := sqlkv.GetKVStore("services")
 		if err != nil {
 			return nil, fmt.Errorf("cannot open service db: %s", err)
 		}
-		err = fdb.Open()
+		fdb, err := sqlkv.GetKVStore("serviceFuncs")
 		if err != nil {
 			return nil, fmt.Errorf("cannot open function db: %s", err)
 		}

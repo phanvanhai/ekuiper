@@ -17,9 +17,9 @@ package planner
 import (
 	"errors"
 	"fmt"
-	"path"
 
 	"github.com/lf-edge/ekuiper/internal/conf"
+	"github.com/lf-edge/ekuiper/internal/pkg/sqlkv"
 	"github.com/lf-edge/ekuiper/internal/topo"
 	"github.com/lf-edge/ekuiper/internal/topo/node"
 	"github.com/lf-edge/ekuiper/internal/topo/operator"
@@ -29,12 +29,12 @@ import (
 	"github.com/lf-edge/ekuiper/pkg/kv"
 )
 
-func Plan(rule *api.Rule, storePath string) (*topo.Topo, error) {
-	return PlanWithSourcesAndSinks(rule, storePath, nil, nil)
+func Plan(rule *api.Rule) (*topo.Topo, error) {
+	return PlanWithSourcesAndSinks(rule, nil, nil)
 }
 
 // For test only
-func PlanWithSourcesAndSinks(rule *api.Rule, storePath string, sources []*node.SourceNode, sinks []*node.SinkNode) (*topo.Topo, error) {
+func PlanWithSourcesAndSinks(rule *api.Rule, sources []*node.SourceNode, sinks []*node.SinkNode) (*topo.Topo, error) {
 	sql := rule.Sql
 
 	conf.Log.Infof("Init rule with options %+v", rule.Options)
@@ -50,12 +50,10 @@ func PlanWithSourcesAndSinks(rule *api.Rule, storePath string, sources []*node.S
 	if rule.Options.SendMetaToSink && (len(streamsFromStmt) > 1 || stmt.Dimensions != nil) {
 		return nil, fmt.Errorf("Invalid option sendMetaToSink, it can not be applied to window")
 	}
-	store := kv.GetDefaultKVStore(path.Join(storePath, "stream"))
-	err = store.Open()
+	store, err := sqlkv.GetKVStore("stream")
 	if err != nil {
 		return nil, err
 	}
-	defer store.Close()
 	// Create logical plan and optimize. Logical plans are a linked list
 	lp, err := createLogicalPlan(stmt, rule.Options, store)
 	if err != nil {
