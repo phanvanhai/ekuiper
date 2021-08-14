@@ -17,6 +17,8 @@ package planner
 import (
 	"errors"
 	"fmt"
+	"path"
+
 	"github.com/lf-edge/ekuiper/internal/conf"
 	"github.com/lf-edge/ekuiper/internal/topo"
 	"github.com/lf-edge/ekuiper/internal/topo/node"
@@ -25,7 +27,6 @@ import (
 	"github.com/lf-edge/ekuiper/pkg/api"
 	"github.com/lf-edge/ekuiper/pkg/ast"
 	"github.com/lf-edge/ekuiper/pkg/kv"
-	"path"
 )
 
 func Plan(rule *api.Rule, storePath string) (*topo.Topo, error) {
@@ -246,7 +247,7 @@ func createLogicalPlan(stmt *ast.SelectStatement, opt *api.RuleOption, store kv.
 			}.Init()
 			if w.Interval != nil {
 				wp.interval = w.Interval.Val
-			} else if w.WindowType == ast.COUNT_WINDOW {
+			} else if w.WindowType == ast.COUNT_WINDOW || w.WindowType == ast.PAD_COUNT_WINDOW {
 				//if no interval value is set and it's count window, then set interval to length value.
 				wp.interval = w.Length.Val
 			}

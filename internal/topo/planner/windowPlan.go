@@ -32,7 +32,7 @@ func (p WindowPlan) Init() *WindowPlan {
 }
 
 func (p *WindowPlan) PushDownPredicate(condition ast.Expr) (ast.Expr, LogicalPlan) {
-	if p.wtype == ast.COUNT_WINDOW {
+	if p.wtype == ast.COUNT_WINDOW || p.wtype == ast.PAD_COUNT_WINDOW {
 		return condition, p
 	} else if p.isEventTime {
 		// TODO event time filter, need event window op support

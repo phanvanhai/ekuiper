@@ -17,14 +17,15 @@ package node
 import (
 	"encoding/gob"
 	"fmt"
+	"math"
+	"time"
+
 	"github.com/benbjohnson/clock"
 	"github.com/lf-edge/ekuiper/internal/conf"
 	"github.com/lf-edge/ekuiper/internal/xsql"
 	"github.com/lf-edge/ekuiper/pkg/api"
 	"github.com/lf-edge/ekuiper/pkg/ast"
 	"github.com/lf-edge/ekuiper/pkg/cast"
-	"math"
-	"time"
 )
 
 type WindowConfig struct {
@@ -68,7 +69,7 @@ func NewWindowOp(name string, w WindowConfig, streams []string, options *api.Rul
 	}
 	o.isEventTime = options.IsEventTime
 	o.window = &w
-	if o.window.Interval == 0 && o.window.Type == ast.COUNT_WINDOW {
+	if o.window.Interval == 0 && o.window.Type == ast.COUNT_WINDOW || o.window.Type == ast.PAD_COUNT_WINDOW {
 		//if no interval value is set and it's count window, then set interval to length value.
 		o.window.Interval = o.window.Length
 	}
@@ -159,7 +160,7 @@ func (o *WindowOperator) execProcessingWindow(ctx api.StreamContext, inputs []*x
 	case ast.SESSION_WINDOW:
 		o.ticker = conf.GetTicker(o.window.Length)
 		o.interval = o.window.Interval
-	case ast.COUNT_WINDOW:
+	case ast.COUNT_WINDOW, ast.PAD_COUNT_WINDOW:
 		o.interval = o.window.Interval
 	}
 
@@ -258,13 +259,20 @@ func (o *WindowOperator) execProcessingWindow(ctx api.StreamContext, inputs []*x
 						ctx.PutState(TRIGGER_TIME_KEY, o.triggerTime)
 						log.Debugf("Session window set start time %d", o.triggerTime)
 					}
-				case ast.COUNT_WINDOW:
+				case ast.COUNT_WINDOW, ast.PAD_COUNT_WINDOW:
 					o.msgCount++
 					log.Debugf(fmt.Sprintf("msgCount: %d", o.msgCount))
 					if o.msgCount%o.window.Interval != 0 {
 						continue
 					} else {
 						o.msgCount = 0
+					}
+
+					if o.window.Type == ast.PAD_COUNT_WINDOW {
+						if er := paddingList(&inputs, o.window.Length); er != nil {
+							log.Error("found error when trying to")
+							errCh <- er
+						}
 					}
 
 					if tl, er := NewTupleList(inputs, o.window.Length); er != nil {
@@ -330,6 +338,28 @@ func (o *WindowOperator) execProcessingWindow(ctx api.StreamContext, inputs []*x
 			return
 		}
 	}
+}
+
+func paddingList(tuples *[]*xsql.Tuple, windowSize int) error {
+	if windowSize <= 0 {
+		return fmt.Errorf("window size should not be less than zero")
+	} else if (*tuples) == nil || len(*tuples) == 0 {
+		return fmt.Errorf("the tuples should not be nil or empty")
+	}
+
+	if len(*tuples) >= windowSize {
+		return nil
+	}
+
+	var pad []*xsql.Tuple
+	for i := len(*tuples); i < windowSize; i++ {
+		pad = append(pad, (*tuples)[0])
+	}
+
+	// padding = prepend to tuples
+	*tuples = append(pad, *tuples...)
+
+	return nil
 }
 
 type TupleList struct {

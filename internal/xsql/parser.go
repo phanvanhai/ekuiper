@@ -16,14 +16,15 @@ package xsql
 
 import (
 	"fmt"
-	"github.com/golang-collections/collections/stack"
-	"github.com/lf-edge/ekuiper/pkg/ast"
-	"github.com/lf-edge/ekuiper/pkg/message"
 	"io"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/golang-collections/collections/stack"
+	"github.com/lf-edge/ekuiper/pkg/ast"
+	"github.com/lf-edge/ekuiper/pkg/message"
 )
 
 type Parser struct {
@@ -823,6 +824,27 @@ func validateWindows(name string, args []ast.Expr) (ast.WindowType, error) {
 		} else {
 			return ast.COUNT_WINDOW, fmt.Errorf("Invalid parameter count.")
 		}
+	case "padcountwindow":
+		if len(args) == 1 {
+			if para1, ok := args[0].(*ast.IntegerLiteral); ok && para1.Val > 0 {
+				return ast.PAD_COUNT_WINDOW, nil
+			} else {
+				return ast.PAD_COUNT_WINDOW, fmt.Errorf("Invalid parameter value %s.", args[0])
+			}
+		} else if len(args) == 2 {
+			if para1, ok1 := args[0].(*ast.IntegerLiteral); ok1 {
+				if para2, ok2 := args[1].(*ast.IntegerLiteral); ok2 {
+					if para1.Val < para2.Val {
+						return ast.PAD_COUNT_WINDOW, fmt.Errorf("The second parameter value %d should be less than the first parameter %d.", para2.Val, para1.Val)
+					} else {
+						return ast.PAD_COUNT_WINDOW, nil
+					}
+				}
+			}
+			return ast.PAD_COUNT_WINDOW, fmt.Errorf("Invalid parameter value %s, %s.", args[0], args[1])
+		} else {
+			return ast.PAD_COUNT_WINDOW, fmt.Errorf("Invalid parameter count.")
+		}
 
 	}
 	return ast.NOT_WINDOW, nil
@@ -847,7 +869,7 @@ func validateWindow(funcName string, expectLen int, args []ast.Expr) error {
 
 func (p *Parser) ConvertToWindows(wtype ast.WindowType, args []ast.Expr) (*ast.Window, error) {
 	win := &ast.Window{WindowType: wtype}
-	if wtype == ast.COUNT_WINDOW {
+	if wtype == ast.COUNT_WINDOW || wtype == ast.PAD_COUNT_WINDOW {
 		win.Length = &ast.IntegerLiteral{Val: args[0].(*ast.IntegerLiteral).Val}
 		if len(args) == 2 {
 			win.Interval = &ast.IntegerLiteral{Val: args[1].(*ast.IntegerLiteral).Val}
